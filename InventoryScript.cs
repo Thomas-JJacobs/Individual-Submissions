@@ -28,7 +28,7 @@ public class InventoryScript : MonoBehaviour
     public Element[] Inventory;//We want a catlegory item varients which we can collect into the array "Inventory".
 
     //Private / hidden from view.
-    private int PreviousPosition=0; //We use this to calculate the delta of IndexPosition per frame
+    private int PreviousPosition=0; //We use this to calculate the delta of IndexPosition per frame.
     private AudioSource Audiosource; //The component on the "PC-Player" used to play an audio clip.
     private Text ItemText;
     private int IndexPosition=0;
@@ -63,7 +63,7 @@ public class InventoryScript : MonoBehaviour
         ItemText.text = Inventory[IndexPosition].ItemName;
         InventoryCursor.transform.position = Inventory[IndexPosition].ItemUiTile.transform.position;
 
-        Debug.Log(IndexPosition);//For Testing
+        Debug.Log(IndexPosition);//For Testing.
         PreviousPosition = IndexPosition;
     }
 
