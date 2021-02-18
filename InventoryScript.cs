@@ -41,6 +41,7 @@ public class InventoryScript : MonoBehaviour
     private AudioSource Audiosource; //The component on the "PC-Player" used to play an audio clip.
     private Text ItemText;
     private int IndexPosition=0;
+    private bool CallDown = false; //if true, call down is active.
     /// <summary>
     /// Play's the linked sound-clip when a new item is selected.
     /// </summary>
@@ -48,6 +49,13 @@ public class InventoryScript : MonoBehaviour
     {
         Audiosource = GetComponent<AudioSource>(); ItemText = GameObject.FindGameObjectWithTag("InventoryText").GetComponent<Text>();
         ObjLocation = Instantiate(Inventory[IndexPosition].ItemLocation);
+    }
+
+    private IEnumerator ActivateCallDown()
+    {
+        CallDown = true;
+        yield return new WaitForSeconds(5);
+        CallDown = false;
     }
 
     private void Update()
@@ -75,9 +83,9 @@ public class InventoryScript : MonoBehaviour
         RaycastHit hit;
         int layerMask = 1 << 8;
         layerMask = ~layerMask;
-        if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out hit, Mathf.Infinity, layerMask))
+        if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out hit, Mathf.Infinity, layerMask)&&CallDown == false)
         {
-            if(Input.GetMouseButtonDown(0)){ Inventory[IndexPosition].SpawnItem(hit.point, Audiosource); }
+            if(Input.GetMouseButtonDown(0)) { Inventory[IndexPosition].SpawnItem(hit.point, Audiosource); StartCoroutine(ActivateCallDown()); }
             else
             {
                 ObjLocation.transform.position = hit.point + new Vector3(0, ObjLocation.GetComponent<Collider>().bounds.size.y/2, 0);
