@@ -4,28 +4,37 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [System.Serializable]
-
 //Script by Thomas Jacobs | S212046.
-
-
 public class Element //The element class acts as the blueprints for each possible item in an inventory.
 {
     [Tooltip("The text you want to appear in the UI upon selection.")]
     public string ItemName;
     [Tooltip("The phyisical item you want to spawn into the game-world.")]
     public GameObject Item;
+    public GameObject ItemLocation;
     [Tooltip("The UI tile/element you want to be highlighted upon selection.")]
     public GameObject ItemUiTile;
     [Tooltip("This audio clip will be played upon selection.")]
     public AudioClip Audio;
+
+    public void SpawnItem(Vector3 pos, AudioSource As)
+    {
+        GameObject NewObj = MonoBehaviour.Instantiate(Item); NewObj.transform.position = pos;
+        NewObj.transform.position += new Vector3(0, NewObj.GetComponent<Collider>().bounds.size.y / 2, 0);
+        PlaySound(As);
+    }
+    public void PlaySound(AudioSource As)
+    {
+        As.clip = Audio;
+        As.Play(0);
+    }
 }
-
-
 public class InventoryScript : MonoBehaviour
 {
     [Tooltip("The sprite used to highlight which item is currently in use.")]
     public GameObject InventoryCursor;//The sprite that highlights which gameobject is currently selected.
     public Element[] Inventory;//We want a catlegory item varients which we can collect into the array "Inventory".
+    private GameObject ObjLocation;
 
     //Private / hidden from view.
     private int PreviousPosition=0; //We use this to calculate the delta of IndexPosition per frame.
@@ -35,16 +44,10 @@ public class InventoryScript : MonoBehaviour
     /// <summary>
     /// Play's the linked sound-clip when a new item is selected.
     /// </summary>
-    private void PlaySound(Element Item)
-    {
-        AudioSource As = GetComponent<AudioSource>();
-        As.clip = Item.Audio;
-        As.Play(0);
-    }
-
     private void Start()
     {
         Audiosource = GetComponent<AudioSource>(); ItemText = GameObject.FindGameObjectWithTag("InventoryText").GetComponent<Text>();
+        ObjLocation = Instantiate(Inventory[IndexPosition].ItemLocation);
     }
 
     private void Update()
@@ -56,15 +59,33 @@ public class InventoryScript : MonoBehaviour
         //If a new item is selected...
         if (PreviousPosition != IndexPosition)
         {
-            PlaySound(Inventory[IndexPosition]);
+            Inventory[IndexPosition].PlaySound(Audiosource);
+            Destroy(ObjLocation.gameObject);
+            ObjLocation = Instantiate(Inventory[IndexPosition].ItemLocation);
         }
 
         //UI:
         ItemText.text = Inventory[IndexPosition].ItemName;
         InventoryCursor.transform.position = Inventory[IndexPosition].ItemUiTile.transform.position;
-
-        Debug.Log(IndexPosition);//For Testing.
         PreviousPosition = IndexPosition;
-    }
 
+
+        //Raycast:
+   
+        RaycastHit hit;
+        int layerMask = 1 << 8;
+        layerMask = ~layerMask;
+        if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out hit, Mathf.Infinity, layerMask))
+        {
+            if(Input.GetMouseButtonDown(0)){ Inventory[IndexPosition].SpawnItem(hit.point, Audiosource); }
+            else
+            {
+                ObjLocation.transform.position = hit.point + new Vector3(0, ObjLocation.GetComponent<Collider>().bounds.size.y/2, 0);
+            }
+        }
+        else
+        {
+            Debug.DrawRay(transform.position, transform.forward * 10000, Color.red);
+        }
+    }
 }
