@@ -16,12 +16,19 @@ public class Element //The element class acts as the blueprints for each possibl
     public GameObject ItemUiTile;
     [Tooltip("This audio clip will be played upon selection.")]
     public AudioClip Audio;
+    public int MaxItems;
+    private int ItemCount;
 
     public void SpawnItem(Vector3 pos, AudioSource As)
     {
-        GameObject NewObj = MonoBehaviour.Instantiate(Item); NewObj.transform.position = pos;
-        NewObj.transform.position += new Vector3(0, NewObj.GetComponent<Collider>().bounds.size.y / 2, 0);
-        PlaySound(As);
+        if(ItemCount < MaxItems | MaxItems == 0)// is equal to an infinite amount of spawns
+        {
+            GameObject NewObj = MonoBehaviour.Instantiate(Item); NewObj.transform.position = pos;
+            NewObj.transform.position += new Vector3(0, NewObj.GetComponent<Collider>().bounds.size.y / 2, 0);
+            PlaySound(As);
+            ItemCount++;
+        }
+        else { Debug.Log("Limit Reached"); }
     }
     public void PlaySound(AudioSource As)
     {
@@ -34,9 +41,9 @@ public class InventoryScript : MonoBehaviour
     [Tooltip("The sprite used to highlight which item is currently in use.")]
     public GameObject InventoryCursor;//The sprite that highlights which gameobject is currently selected.
     public Element[] Inventory;//We want a catlegory item varients which we can collect into the array "Inventory".
-    private GameObject ObjLocation;
 
     //Private / hidden from view.
+    private GameObject ObjLocation;
     private int PreviousPosition=0; //We use this to calculate the delta of IndexPosition per frame.
     private AudioSource Audiosource; //The component on the "PC-Player" used to play an audio clip.
     private Text ItemText;
@@ -54,7 +61,7 @@ public class InventoryScript : MonoBehaviour
     private IEnumerator ActivateCallDown()
     {
         CallDown = true;
-        yield return new WaitForSeconds(5);
+        yield return new WaitForSeconds(2);
         CallDown = false;
     }
 
@@ -83,9 +90,9 @@ public class InventoryScript : MonoBehaviour
         RaycastHit hit;
         int layerMask = 1 << 8;
         layerMask = ~layerMask;
-        if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out hit, Mathf.Infinity, layerMask)&&CallDown == false)
+        if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out hit, Mathf.Infinity, layerMask))
         {
-            if(Input.GetMouseButtonDown(0)) { Inventory[IndexPosition].SpawnItem(hit.point, Audiosource); StartCoroutine(ActivateCallDown()); }
+            if(Input.GetMouseButtonDown(0) && CallDown == false) { Inventory[IndexPosition].SpawnItem(hit.point, Audiosource); StartCoroutine(ActivateCallDown()); }
             else
             {
                 ObjLocation.transform.position = hit.point + new Vector3(0, ObjLocation.GetComponent<Collider>().bounds.size.y/2, 0);
